@@ -29,7 +29,7 @@ import * as os from 'node:os';
 
 let _batchDepth = 0;
 // Map store instance to { listeners, prevState, nextState }
-const _batchStores = new Map<Set<any>, { prevState: any; nextState: any }>();
+const _batchStores = new Map<Set<any>, { prevState: any; nextState: any ;commit: () => void; rollback:(s:any)=> void; }>();
 
 /**
  * Batch multiple state updates into a single render pass.
@@ -63,12 +63,16 @@ export function batch(fn: () => void): void {
         _batchDepth--;
         if (_batchDepth === 0) {
             if (threw) {
+                for (const [, { prevState, rollback }] of _batchStores) {
+                    rollback(prevState);
+                }
                 _batchStores.clear(); // Don't notify listeners with partial state
             } else {
                 queueMicrotask(() => {
                     const stores = Array.from(_batchStores.entries());
                     _batchStores.clear();
-                    for (const [listeners, { prevState, nextState }] of stores) {
+                    for (const [listeners, { prevState, nextState ,commit}] of stores) {
+                        commit();
                         for (const listener of listeners) {
                             listener(nextState, prevState);
                         }
@@ -253,23 +257,29 @@ export function createStore<T extends object>(
                 key => !Object.is((state as any)[key], (nextState as any)[key])
             );
             if (hasChanged) {
-                state = nextState;
                 if (_batchDepth > 0) {
                     // We're in a batch: defer listener notifications and track the final state
                     const existing = _batchStores.get(listeners);
                     if (!existing) {
-                        _batchStores.set(listeners, { prevState, nextState });
+                        _batchStores.set(listeners, { prevState, nextState,
+                            commit: ()=>{state = nextState; persistState();},
+                            rollback:(s:any) => {state =s;},
+                         });
                     } else {
                         // Update to the new nextState, but keep the original prevState
                         existing.nextState = nextState;
+                        existing.commit = () => { state = nextState; persistState(); };
                     }
+                    state = nextState;
                 } else {
+                    state = nextState; 
                     // Not in a batch: notify immediately
                     for (const listener of listeners) {
                         listener(state, prevState);
                     }
+                    persistState();
                 }
-                persistState();
+                
             }
             return state;
         };
