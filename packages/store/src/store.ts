@@ -29,8 +29,14 @@ import * as os from 'node:os';
 
 let _batchDepth = 0;
 // Map store instance to { listeners, prevState, nextState }
-const _batchStores = new Map<Set<any>, { prevState: any; nextState: any ;commit: () => void; rollback:(s:any)=> void; }>();
+interface BatchEntry<T> {
+    prevState: T;
+    nextState: T;
+    commit: () => void;
+    rollback: (s: T) => void;
+}
 
+const _batchStores = new Map<Set<any>, BatchEntry<any>>();
 /**
  * Batch multiple state updates into a single render pass.
  *
@@ -71,7 +77,7 @@ export function batch(fn: () => void): void {
                 queueMicrotask(() => {
                     const stores = Array.from(_batchStores.entries());
                     _batchStores.clear();
-                    for (const [listeners, { prevState, nextState ,commit}] of stores) {
+                    for (const [listeners, { prevState, nextState ,commit }] of stores) {
                         commit();
                         for (const listener of listeners) {
                             listener(nextState, prevState);
@@ -261,10 +267,12 @@ export function createStore<T extends object>(
                     // We're in a batch: defer listener notifications and track the final state
                     const existing = _batchStores.get(listeners);
                     if (!existing) {
-                        _batchStores.set(listeners, { prevState, nextState,
-                            commit: ()=>{state = nextState; persistState();},
-                            rollback:(s:any) => {state =s;},
-                         });
+                        _batchStores.set(listeners, {
+                            prevState,
+                            nextState,
+                            commit: () => { state = nextState; persistState(); },
+                            rollback: (s) => { state = s; },
+                        });
                     } else {
                         // Update to the new nextState, but keep the original prevState
                         existing.nextState = nextState;
