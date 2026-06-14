@@ -1,5 +1,6 @@
 import { describe, it, expect, vi, afterEach } from 'vitest'
-import { createStore, batch, logger } from './store.js'
+import { createStore, batch } from './store.js'
+import { logger } from './logger.js'
 import * as fs from 'node:fs'
 import * as path from 'node:path'
 
