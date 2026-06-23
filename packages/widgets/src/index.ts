@@ -13,8 +13,6 @@ export { Text } from './display/Text.js';
 export type { TextProps } from './display/Text.js';
 export { LogView } from './display/LogView.js';
 export type { LogViewOptions } from './display/LogView.js';
-export { ProgressString } from './ProgressBar/ProgressBar.js';
-export type { ProgressStringProps, ProgressBarStyle } from './ProgressBar/ProgressBar.js';
 export { Tree } from './display/Tree.js';
 export type { TreeNode, TreeOptions } from './display/Tree.js';
 export { JSONView, jsonToTree } from './display/JSONView.js';
@@ -30,8 +28,6 @@ export type { ThreadMessage } from './display/ChatThread.js';
 export { ToolCall, ToolApproval } from './display/ToolCall.js';
 export type { ToolCallOptions, ToolApprovalOptions, ToolCallStatus } from './display/ToolCall.js';
 export { Canvas } from './display/Canvas.js';
-export { Rating } from './display/Rating.js';
-export type { RatingOptions } from './display/Rating.js';
 export { FPSCounter } from './display/FPSCounter.js';
 export type { FPSCounterOptions } from './display/FPSCounter.js';
 export { Pty } from './display/Pty.js';
@@ -128,8 +124,6 @@ export type { DraggableOptions, DroppableOptions } from './layout/DragAndDrop.js
 export { Fill } from './layout/Fill.js';
 export type { FillOptions } from './layout/Fill.js';
 export { SplitPane } from './layout/SplitPane.js';
-export { NotificationQueue } from "./feedback/NotificationQueue.js";
-export type { Notification, NotificationPriority } from "./feedback/NotificationQueue.js";
 export type { SplitPaneOptions, SplitDirection } from './layout/SplitPane.js';
 
 // ── Feedback Widgets ──────────────────────────────────
@@ -213,8 +207,6 @@ export type { CarouselOptions } from './display/Carousel.js';
 export { Tooltip } from './display/Tooltip.js';
 export type { TooltipOptions } from './display/Tooltip.js';
 
-export { ContextMenu as FloatingContextMenu } from './display/ContextMenu.js';
-export type { ContextMenuOptions as FloatingContextMenuOptions } from './display/ContextMenu.js';
 
 export { Panel } from './layout/Panel.js';
 export { Clock } from './display/Clock.js';
@@ -262,15 +254,10 @@ export type { TimelineItem, TimelineStatus } from './display/Timeline.js';
 export { Marquee } from './display/Marquee.js';
 export type { MarqueeDirection, MarqueeOptions } from './display/Marquee.js';
 export { DataGrid } from './data/DataGrid.js';
-export { DataGrid as DataGridView } from './data/DataGrid.js';
 export type { DataGridColumn, DataGridRow, DataGridOptions, SortDirection } from './data/DataGrid.js';
 export { ScrollAcceleration } from './layout/scroll-acceleration.js';
 export { PieChart } from './data/PieChart.js';
 export type { PieSlice, PieChartOptions } from './data/PieChart.js';
-
-export * from './data/BrailleCanvas.js';
-export * from './data/Sparkline.js';
-export * from './data/LineChart.js';
 
 export {
     BarColumn,
