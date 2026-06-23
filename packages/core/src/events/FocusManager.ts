@@ -32,6 +32,11 @@ export class FocusManager {
      * that belong to the topmost trap container are reachable via Tab.
      */
     private _trapStack: string[] = [];
+    /**
+     * Parallel stack to _trapStack. Captures the focused widget ID
+     * before each trap() call so release() can restore it on dismiss.
+     */
+    private _preTrapFocus: string[] = [];
 
     /**
      * Map of container ID → child widget IDs that belong to it.
@@ -244,6 +249,7 @@ export class FocusManager {
      * nested modals create nested traps.
      */
     trap(containerId: string): void {
+        this._preTrapFocus.push(this.currentId ?? '');
         this._trapStack.push(containerId);
 
         // Focus the first focusable inside the trap
@@ -261,7 +267,11 @@ export class FocusManager {
      * Release the current focus trap. Restores previous trap or free navigation.
      */
     release(): void {
-        this._trapStack.pop();
+        this._trapStack.pop();\
+        const previousFocusId = this._preTrapFocus.pop();
+        if (previousFocusId) {
+            this.focusWidget(previousFocusId);
+        }
     }
 
     /** Whether a focus trap is currently active */

@@ -381,3 +381,76 @@ describe('FocusManager Re-entrancy', () => {
         expect(fm.currentId).toBe('b');
     });
 });
+describe('FocusManager Focus Trap — focus restore', () => {
+    it('release() restores focus to widget focused before trap() was called', () => {
+        const fm = new FocusManager();
+        fm.register(makeWidget('trigger-btn'));
+        fm.register(makeWidget('modal-input'));
+        fm.register(makeWidget('modal-confirm'));
+        fm.registerContainerMembers('dialog', ['modal-input', 'modal-confirm']);
+
+        fm.focusWidget('trigger-btn');
+        expect(fm.currentId).toBe('trigger-btn');
+
+        fm.trap('dialog');
+        expect(fm.currentId).toBe('modal-input'); // focus moved into modal
+
+        fm.focusNext(); // navigate inside modal
+        expect(fm.currentId).toBe('modal-confirm');
+
+        fm.release();
+        // Must return to trigger-btn, not stay inside the closed modal
+        expect(fm.currentId).toBe('trigger-btn');
+    });
+
+    it('nested traps: each release restores to the correct prior focus', () => {
+        const fm = new FocusManager();
+        fm.register(makeWidget('main-btn'));
+        fm.register(makeWidget('outer-input'));
+        fm.register(makeWidget('inner-input'));
+        fm.registerContainerMembers('outer-modal', ['outer-input']);
+        fm.registerContainerMembers('inner-modal', ['inner-input']);
+
+        fm.focusWidget('main-btn');
+
+        fm.trap('outer-modal');
+        expect(fm.currentId).toBe('outer-input');
+
+        fm.trap('inner-modal');
+        expect(fm.currentId).toBe('inner-input');
+
+        fm.release(); // release inner
+        expect(fm.currentId).toBe('outer-input'); // restored to pre-inner-trap focus
+        expect(fm.currentTrapId).toBe('outer-modal');
+
+        fm.release(); // release outer
+        expect(fm.currentId).toBe('main-btn'); // restored to pre-outer-trap focus
+        expect(fm.isTrapped).toBe(false);
+    });
+
+    it('release() with no prior focus does not throw', () => {
+        const fm = new FocusManager();
+        fm.register(makeWidget('modal-btn'));
+        fm.registerContainerMembers('dialog', ['modal-btn']);
+
+        // trap() called before any explicit focusWidget — currentId is auto-focused
+        fm.trap('dialog');
+
+        // Should not throw even if previousFocusId resolves to empty string
+        expect(() => fm.release()).not.toThrow();
+    });
+
+    it('focus does not leak outside the modal after release when no trigger was focused', () => {
+        const fm = new FocusManager();
+        fm.register(makeWidget('a'));
+        fm.register(makeWidget('modal-x'));
+        fm.registerContainerMembers('m', ['modal-x']);
+
+        fm.focusWidget('a');
+        fm.trap('m');
+        fm.release();
+
+        // 'a' had focus before the trap — it should be restored
+        expect(fm.currentId).toBe('a');
+    });
+});
