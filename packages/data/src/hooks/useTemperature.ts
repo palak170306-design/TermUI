@@ -1,17 +1,7 @@
 import { useState, useEffect } from '@termuijs/jsx';
-import { execFile } from 'node:child_process';
 import { readFile } from 'node:fs/promises';
 import * as os from 'node:os';
-import type { ExecOptions } from 'node:child_process';
-
-const execFileAsync = (file: string, args: string[], opts?: ExecOptions): Promise<string> => {
-    return new Promise((resolve, reject) => {
-        execFile(file, args, opts, (err, stdout) => {
-            if (err) reject(err);
-            else resolve(String(stdout));
-        });
-    });
-};
+import { execFileAsync } from './_exec.js';
 
 export interface TemperatureData {
     celsius: number;
