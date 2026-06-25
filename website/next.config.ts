@@ -1,4 +1,5 @@
 import type { NextConfig } from 'next'
+import path from 'path'
 import { createMDX } from 'fumadocs-mdx/next'
 
 const withMDX = createMDX()
@@ -8,6 +9,7 @@ const config: NextConfig = {
   turbopack: {
     resolveAlias: {
       child_process: { browser: './src/lib/empty-child-process.ts' },
+      'node:child_process': path.resolve(__dirname, 'src/lib/empty-child-process.ts'),
       net:           { browser: './src/lib/empty.js' },
       tls:           { browser: './src/lib/empty.js' },
     },
@@ -33,6 +35,7 @@ const config: NextConfig = {
         'node:buffer': 'buffer/',
         'node:string_decoder': 'string_decoder',
         'node:events': 'events/',
+        'node:child_process': path.resolve(__dirname, 'src/lib/empty-child-process.ts'),
       }
     }
     return cfg
