@@ -108,9 +108,10 @@ export function BrowserPreview({
             rows,
             cursorBlink: true,
             theme: {
-                background: '#0d0d12',
+                background: '#0a0a12',
                 foreground: '#e8e8f0',
                 cursor: '#00ff88',
+                cursorAccent: '#0a0a12',
             },
         })
 
@@ -165,7 +166,7 @@ export function BrowserPreview({
         <div
             ref={containerRef}
             className={className}
-            style={{ background: '#0d0d12', borderRadius: 8, overflow: 'hidden' }}
+            style={{ background: '#0a0a12' }}
         />
     )
 }
