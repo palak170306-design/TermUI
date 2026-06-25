@@ -33,6 +33,8 @@ export interface TemporalStoreActions<T> {
     redo: () => void;
     getHistory: () => TemporalHistory<T>;
     readonly present: T;
+    readonly canUndo: boolean;
+    readonly  canRedo: boolean;
 }
 
 /**
@@ -58,15 +60,16 @@ export interface HistoryStoreOptions<T> {
      * })
      */
     equals?: (a: T, b: T) => boolean;
+    maxLength?: number;
 }
 
-export function createHistoryStore<T>(initialPresent: T, options: HistoryStoreOptions<T>={}): TemporalStoreActions<T> {
-    let timeline: TemporalHistory<T> = {
-        past: [],
-        present: initialPresent,
-        future: [],
-    }
+export function createHistoryStore<T>(
+    initialPresent: T,
+    options: HistoryStoreOptions<T> = {}
+): TemporalStoreActions<T> {
 
+    // Structural equality via JSON.stringify; fallback to Object.is for
+    // non-serialisable types (circular refs, BigInt, etc.)
     const equals = options.equals ?? ((a: T, b: T): boolean => {
         try {
             return JSON.stringify(a) === JSON.stringify(b);
@@ -75,49 +78,73 @@ export function createHistoryStore<T>(initialPresent: T, options: HistoryStoreOp
         }
     });
 
+    // undefined = no cap; any positive integer = max past[] length
+    const maxLength = options.maxLength;
+
+    let timeline: TemporalHistory<T> = {
+        past: [],
+        present: initialPresent,
+        future: [],
+    };
+
     return {
         // Readonly accessor for the current state.
         get present(): T {
             return timeline.present;
         },
 
-        // Push a new state if it is different from the current `present`.
+        // O(1) availability checks — no clone needed.
+        get canUndo(): boolean {
+            return timeline.past.length > 0;
+        },
+
+        get canRedo(): boolean {
+            return timeline.future.length > 0;
+        },
+
+        // Push a new state if it is different from the current present.
         set(newState: T): void {
-            if(equals(timeline.present, newState)) return;
+            if (equals(timeline.present, newState)) return;
+
+            // Build the new past array, then evict oldest if over the cap.
+            let newPast = [...timeline.past, timeline.present];
+            if (maxLength !== undefined && newPast.length > maxLength) {
+                newPast = newPast.slice(newPast.length - maxLength);
+            }
 
             timeline = {
-                past: [...timeline.past, timeline.present],
+                past: newPast,
                 present: newState,
-                future: []  // New actions break old future timelines
-            }
+                future: [], // New actions break old future timelines
+            };
         },
 
         // Revert to the most recent past state (if any).
         undo(): void {
-            if (timeline.past.length == 0) return;
+            if (timeline.past.length === 0) return;
 
             const prev = timeline.past[timeline.past.length - 1];
-            const newPast = timeline.past.slice(0, timeline.past.length - 1)
+            const newPast = timeline.past.slice(0, timeline.past.length - 1);
 
             timeline = {
                 past: newPast,
                 present: prev,
-                future: [timeline.present, ...timeline.future]
-            }
+                future: [timeline.present, ...timeline.future],
+            };
         },
 
         // Advance into the next future state (if any).
         redo(): void {
-            if (timeline.future.length == 0) return;
+            if (timeline.future.length === 0) return;
 
             const next = timeline.future[0];
-            const newFuture = timeline.future.slice(1)
+            const newFuture = timeline.future.slice(1);
 
             timeline = {
                 past: [...timeline.past, timeline.present],
                 present: next,
-                future: newFuture
-            }
+                future: newFuture,
+            };
         },
 
         // Return a defensive copy of the timeline.
@@ -125,8 +152,8 @@ export function createHistoryStore<T>(initialPresent: T, options: HistoryStoreOp
             return {
                 past: [...timeline.past],
                 present: timeline.present,
-                future: [...timeline.future]
-            }
-        }
-    }
+                future: [...timeline.future],
+            };
+        },
+    };
 }

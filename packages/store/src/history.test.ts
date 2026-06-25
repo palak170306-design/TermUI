@@ -138,3 +138,104 @@ describe('TemporalHistory Middleware', () => {
         expect(history.past.length).toBe(0);
     });
 });
+describe('TemporalHistory — canUndo / canRedo', () => {
+    it('canUndo is false on a fresh store', () => {
+        const store = createHistoryStore('init');
+        expect(store.canUndo).toBe(false);
+    });
+
+    it('canRedo is false on a fresh store', () => {
+        const store = createHistoryStore('init');
+        expect(store.canRedo).toBe(false);
+    });
+
+    it('canUndo is true after set()', () => {
+        const store = createHistoryStore('a');
+        store.set('b');
+        expect(store.canUndo).toBe(true);
+    });
+
+    it('canRedo is true after undo()', () => {
+        const store = createHistoryStore('a');
+        store.set('b');
+        store.undo();
+        expect(store.canRedo).toBe(true);
+    });
+
+    it('canUndo is false after undoing all the way back', () => {
+        const store = createHistoryStore('a');
+        store.set('b');
+        store.undo();
+        expect(store.canUndo).toBe(false);
+    });
+
+    it('canRedo is false after redo() reaches the end', () => {
+        const store = createHistoryStore('a');
+        store.set('b');
+        store.undo();
+        store.redo();
+        expect(store.canRedo).toBe(false);
+    });
+});
+
+describe('TemporalHistory — maxLength', () => {
+    it('past[] does not exceed maxLength', () => {
+        const store = createHistoryStore('s0', { maxLength: 3 });
+        store.set('s1');
+        store.set('s2');
+        store.set('s3');
+        store.set('s4'); // 4th push — oldest should be evicted
+
+        const h = store.getHistory();
+        expect(h.past.length).toBe(3);
+    });
+
+    it('evicts the oldest entry when maxLength is exceeded', () => {
+        const store = createHistoryStore('s0', { maxLength: 3 });
+        store.set('s1');
+        store.set('s2');
+        store.set('s3');
+        store.set('s4');
+
+        const h = store.getHistory();
+        // s0 should have been evicted; oldest remaining is s1
+        expect(h.past[0]).toBe('s2');
+        expect(h.past[1]).toBe('s3');
+        expect(h.past[2]).toBe('s4');
+        expect(store.present).toBe('s4');
+    });
+
+    it('undo() still works correctly after eviction', () => {
+        const store = createHistoryStore('s0', { maxLength: 2 });
+        store.set('s1');
+        store.set('s2');
+        store.set('s3'); // s0 evicted — past is [s1, s2], present is s3
+
+        store.undo();
+        expect(store.present).toBe('s2');
+
+        store.undo();
+        expect(store.present).toBe('s1');
+
+        // s0 is gone — can't undo further
+        expect(store.canUndo).toBe(false);
+    });
+
+    it('without maxLength, past[] grows unbounded', () => {
+        const store = createHistoryStore('s0'); // no maxLength
+        for (let i = 1; i <= 10; i++) store.set(`s${i}`);
+        expect(store.getHistory().past.length).toBe(10);
+    });
+
+    it('maxLength of 1 keeps only the single most recent past state', () => {
+        const store = createHistoryStore('s0', { maxLength: 1 });
+        store.set('s1');
+        store.set('s2');
+        store.set('s3');
+
+        const h = store.getHistory();
+        expect(h.past.length).toBe(1);
+        expect(h.past[0]).toBe('s3');
+        expect(store.present).toBe('s3');
+    });
+});
