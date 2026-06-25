@@ -114,6 +114,7 @@ export function BrowserPreview({
         term.loadAddon(fitAddon)
         term.open(el)
         fitAddon.fit() // fills container dimensions → sets actual cols/rows
+        term.focus()   // capture keyboard immediately without requiring a click
 
         const stdout = makeStdout(term)
         const stdin = makeStdin(term)
