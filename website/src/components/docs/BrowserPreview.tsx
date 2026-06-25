@@ -6,6 +6,7 @@ if (typeof (globalThis as any).setImmediate === 'undefined') {
     ;(globalThis as any).clearImmediate = clearTimeout
 }
 
+import { Buffer } from 'buffer'
 import { useEffect, useRef } from 'react'
 import type { RootWidget, AppOptions } from '@termuijs/core'
 import { App, ColorDepth } from '@termuijs/core'
