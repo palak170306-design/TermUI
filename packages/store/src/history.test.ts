@@ -198,10 +198,9 @@ describe('TemporalHistory — maxLength', () => {
         store.set('s4');
 
         const h = store.getHistory();
-        // s0 should have been evicted; oldest remaining is s1
-        expect(h.past[0]).toBe('s2');
-        expect(h.past[1]).toBe('s3');
-        expect(h.past[2]).toBe('s4');
+        // s0 evicted — past keeps the 3 most recent entries before present
+        // past: ['s1','s2','s3'], present: 's4'
+        expect(h.past).toEqual(['s1', 's2', 's3']);
         expect(store.present).toBe('s4');
     });
 
@@ -235,7 +234,7 @@ describe('TemporalHistory — maxLength', () => {
 
         const h = store.getHistory();
         expect(h.past.length).toBe(1);
-        expect(h.past[0]).toBe('s3');
+        expect(h.past[0]).toBe('s2');
         expect(store.present).toBe('s3');
     });
 });

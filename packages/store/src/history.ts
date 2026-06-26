@@ -67,7 +67,14 @@ export function createHistoryStore<T>(
     initialPresent: T,
     options: HistoryStoreOptions<T> = {}
 ): TemporalStoreActions<T> {
-
+     if (
+        options.maxLength !== undefined &&
+        (!Number.isInteger(options.maxLength) || options.maxLength < 1)
+    ) {
+        throw new RangeError(
+            `createHistoryStore: maxLength must be a positive integer, got ${options.maxLength}`
+        );
+    }
     // Structural equality via JSON.stringify; fallback to Object.is for
     // non-serialisable types (circular refs, BigInt, etc.)
     const equals = options.equals ?? ((a: T, b: T): boolean => {
