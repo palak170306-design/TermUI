@@ -19,6 +19,8 @@ export interface RegistryEntry {
   tags: string[];
   files: Array<{ path: string; content: string }>;
   dependencies: string[];
+  importPath: string;
+  api: ComponentApi | null;
 }
 
 /**
@@ -138,6 +140,60 @@ export function extractDescription(content: string, name: string): string {
   return `${name} component`;
 }
 
+export interface ApiProp { name: string; type: string; required: boolean; description: string }
+export interface ComponentApi { signature: string; props: ApiProp[] }
+
+/** Pull the leading JSDoc or // description for an interface field. */
+function fieldDescription(block: string, fieldName: string): string {
+  const re = new RegExp(`(?:\\/\\*\\*([\\s\\S]*?)\\*\\/|\\/\\/([^\\n]*))\\s*\\n\\s*${fieldName}\\??\\s*:`, 'm');
+  const m = re.exec(block);
+  if (!m) return '';
+  return cleanSummary(m[1] ?? m[2] ?? '');
+}
+
+/** Parse `interface NameOptions { ... }` fields into props. */
+function parseOptionsInterface(content: string, optionsTypeName: string): ApiProp[] {
+  const re = new RegExp(`interface\\s+${optionsTypeName}\\s*(?:extends[^{]+)?{([\\s\\S]*?)\\n}`, 'm');
+  const m = re.exec(content);
+  if (!m) return [];
+  const body = m[1]!;
+  const props: ApiProp[] = [];
+  const fieldRe = /^\s*(\w+)(\??):\s*([^;]+);/gm;
+  let f: RegExpExecArray | null;
+  while ((f = fieldRe.exec(body)) !== null) {
+    const name = f[1]!;
+    props.push({
+      name,
+      type: f[3]!.replace(/\s+/g, ' ').trim(),
+      required: f[2] !== '?',
+      description: fieldDescription(body, name),
+    });
+  }
+  return props;
+}
+
+/**
+ * Build a component's API: the constructor signature plus its options props.
+ * Returns null when the source has no constructor.
+ */
+export function extractApi(content: string, name: string): ComponentApi | null {
+  const ctor = /constructor\s*\(([\s\S]*?)\)\s*{/.exec(content);
+  if (!ctor) return null;
+  const params = ctor[1]!.replace(/\s+/g, ' ').trim();
+  const signature = `new ${name}(${params})`;
+  const props: ApiProp[] = [];
+  const firstParams = params.split(',').slice(0, 2);
+  for (const p of firstParams) {
+    const pm = /^(\w+)(\??):\s*([^=]+?)(?:=.*)?$/.exec(p.trim());
+    if (pm && !/style/i.test(pm[1]!) && !/Options$/.test(pm[3]!.trim())) {
+      props.push({ name: pm[1]!, type: pm[3]!.trim(), required: pm[2] !== '?' && !p.includes('='), description: '' });
+    }
+  }
+  const optType = /:\s*(?:Partial<)?(\w*Options)\b/.exec(params)?.[1];
+  if (optType) props.push(...parseOptionsInterface(content, optType));
+  return { signature, props };
+}
+
 function scanDirectory(dir: string, entries: { path: string; content: string }[]): void {
   if (!statSync(dir, { throwIfNoEntry: false })) return;
   for (const file of readdirSync(dir)) {
@@ -188,6 +244,8 @@ export function buildRegistryEntries(): RegistryEntry[] {
         tags: [detectCategory(path), slug],
         files: [{ path: `${slug}.ts`, content: rewritten }],
         dependencies: collectDeps(rewritten),
+        importPath: pkg,
+        api: extractApi(content, name),
       });
     }
   }

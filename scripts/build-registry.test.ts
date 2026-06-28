@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { buildRegistryEntries, toSlug, detectCategory, rewriteImports, collectDeps, extractDescription } from './build-registry.js';
+import { buildRegistryEntries, toSlug, detectCategory, rewriteImports, collectDeps, extractDescription, extractApi } from './build-registry.js';
 import { readFileSync } from 'node:fs';
 import { join } from 'node:path';
 const PKG = join(import.meta.dirname ?? __dirname, '..', 'packages');
@@ -20,6 +20,27 @@ describe('extractDescription recovery', () => {
     const src = readFileSync(join(PKG, 'widgets/src/display/Carousel.ts'), 'utf-8');
     const d = extractDescription(src, 'Carousel');
     expect(d).not.toBe('Carousel component');
+  });
+});
+
+describe('extractApi', () => {
+  it('parses Badge: positional text arg + variant option', () => {
+    const src = readFileSync(join(PKG, 'widgets/src/display/Badge.ts'), 'utf-8');
+    const api = extractApi(src, 'Badge');
+    expect(api).not.toBeNull();
+    expect(api!.signature).toContain('new Badge(');
+    expect(api!.props.map((p) => p.name)).toContain('variant');
+  });
+  it('parses Spinner options (preset/label)', () => {
+    const src = readFileSync(join(PKG, 'widgets/src/feedback/Spinner.ts'), 'utf-8');
+    const api = extractApi(src, 'Spinner');
+    expect(api).not.toBeNull();
+    const names = api!.props.map((p) => p.name);
+    expect(names).toEqual(expect.arrayContaining(['preset', 'label']));
+    expect(names).not.toContain('onDismiss');
+  });
+  it('returns null when no constructor is present', () => {
+    expect(extractApi('export const x = 1', 'x')).toBeNull();
   });
 });
 
