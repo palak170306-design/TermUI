@@ -9,7 +9,7 @@ export default defineConfig({
         globals: true,
         environment: 'node',
         bail: 0,
-        include: ['packages/*/src/**/*.test.ts', 'packages/*/src/**/*.test.tsx', 'scripts/**/*.test.ts'],
+        include: ['packages/*/src/**/*.test.ts', 'packages/*/src/**/*.test.tsx', 'scripts/**/*.test.ts', 'website/src/**/*.test.ts'],
         coverage: {
             provider: 'v8',
             reporter: ['text', 'html', 'lcov'],
