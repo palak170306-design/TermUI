@@ -180,17 +180,18 @@ export function writeClipboard(text: string, stdout: NodeJS.WriteStream = proces
 }
 export function readClipboard(
     stdin: NodeJS.ReadStream = process.stdin,
-    stdout: NodeJS.WriteStream = process.stdout
+    stdout: NodeJS.WriteStream = process.stdout,
+    timeoutMs = 1000,
 ): Promise<string> {
     return new Promise((resolve, reject) => {
+        let settled = false;
         const handler = (data: Buffer) => {
             const str = data.toString('utf8');
-
             const match = str.match(/\x1b\]52;c;([^\x07]+)\x07/);
 
             if (!match) return;
-
-            stdin.off('data', handler);
+            
+            cleanup();
 
             try {
                 resolve(
@@ -199,6 +200,18 @@ export function readClipboard(
             } catch (err) {
                 reject(err);
             }
+        };
+
+        const timer = setTimeout(() => {
+            cleanup();
+            reject(new Error('Clipboard read timed out'));
+        }, timeoutMs);
+
+        const cleanup = () => {
+            if (settled) return;
+            settled = true;
+            clearTimeout(timer);
+            stdin.off('data', handler);
         };
 
         stdin.on('data', handler);
