@@ -45,6 +45,9 @@ export class ChatMessage extends Widget {
     private _content: string;
     private _timestamp?: Date;
 
+    private _wrappedLines: string[] = [];
+    private _cachedContentWidth = -1;
+
     constructor(options: ChatMessageOptions, style: Partial<Style> = {}) {
         super(style);
         this._role = options.role;
@@ -57,6 +60,8 @@ export class ChatMessage extends Widget {
     setContent(content: string): void {
         if (this._content === content) return; 
         this._content = content;
+        this._wrappedLines = [];
+        this._cachedContentWidth = -1;
         this.markDirty();
     }
 
@@ -103,7 +108,16 @@ export class ChatMessage extends Widget {
 
         const indent = '  ';
         const contentWidth = Math.max(0, width - indent.length);
-        const lines = contentWidth > 0 ? wordWrap(this._content, contentWidth).split('\n') : [];
+
+        if (contentWidth !== this._cachedContentWidth) {
+            this._wrappedLines =
+                contentWidth > 0
+                    ? wordWrap(this._content, contentWidth).split('\n')
+                    : [];
+            this._cachedContentWidth = contentWidth;
+        }
+        
+        const lines = this._wrappedLines;
         const maxContentRows = height - 1;
 
         for (let i = 0; i < Math.min(lines.length, maxContentRows); i++) {
