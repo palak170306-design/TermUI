@@ -310,3 +310,5 @@ export { UnorderedList } from './display/UnorderedList.js';
 export type { UnorderedListOptions } from './display/UnorderedList.js';
 export { Rule } from './display/Rule.js';
 export type { RuleOrientation, RuleOptions } from './display/Rule.js';
+export { WorldMap } from './data/WorldMap.js';
+export type { WorldMapOptions, MapMarker } from './data/WorldMap.js';
