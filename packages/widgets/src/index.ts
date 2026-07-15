@@ -35,6 +35,8 @@ export type { FPSCounterOptions } from './display/FPSCounter.js';
 export { Pty } from './display/Pty.js';
 export type { PtyOptions } from './display/Pty.js';
 export { PerformanceOverlay } from './display/PerformanceOverlay.js';
+export { Image } from './display/Image.js';
+export type { ImageOptions } from './display/Image.js';
 
 // ── Virtual Scroll Helpers ────────────────────────────
 export { computeRange, computeVariableRange } from './input/virtual-scroll.js';
