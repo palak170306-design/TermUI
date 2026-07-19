@@ -12,7 +12,7 @@
 import * as fs from 'node:fs';
 import * as path from 'node:path';
 import { Widget } from '@termuijs/widgets';
-import { type Style, type Screen, type KeyEvent, styleToCellAttrs, truncate, caps, splitGraphemes } from '@termuijs/core';
+import { type Style, type Screen, type KeyEvent, styleToCellAttrs, truncate, caps, splitGraphemes, stringWidth } from '@termuijs/core';
 
 export interface PathInputOptions {
     placeholder?: string;
@@ -228,18 +228,41 @@ export class PathInput extends Widget {
             screen.writeString(x, y, truncate(this._placeholder, width), { ...attrs, dim: true });
         } else {
             const visibleWidth = width - 1;
-            let scrollX = 0;
-            if (this._cursorPos > visibleWidth) {
-                scrollX = this._cursorPos - visibleWidth;
+            const graphemes = this._graphemes();
+            // Post-#2681, _cursorPos IS a grapheme index — use it directly,
+            // do not reconstruct it from accumulated UTF-16 `.length`.
+            const cursorIndex = Math.min(this._cursorPos, graphemes.length);
+
+            // Walk backward from the cursor accumulating cell width (via
+            // stringWidth) until the viewport would overflow, to find the
+            // first visible grapheme index. This keeps the cursor in view
+            // even when graphemes are wider than 1 cell.
+            let scrollIndex = cursorIndex;
+            let widthBeforeCursor = 0;
+            while (scrollIndex > 0) {
+                const graphemeWidth = stringWidth(graphemes[scrollIndex - 1]!);
+                if (widthBeforeCursor + graphemeWidth > visibleWidth) break;
+                widthBeforeCursor += graphemeWidth;
+                scrollIndex--;
             }
-            const visibleText = this._value.slice(scrollX, scrollX + visibleWidth);
+
+            let visibleText = '';
+            let renderedWidth = 0;
+            for (let i = scrollIndex; i < graphemes.length; i++) {
+                const grapheme = graphemes[i]!;
+                const graphemeWidth = stringWidth(grapheme);
+                if (renderedWidth + graphemeWidth > visibleWidth) break;
+                visibleText += grapheme;
+                renderedWidth += graphemeWidth;
+            }
             screen.writeString(x, y, visibleText, attrs);
 
             if (this.isFocused) {
-                const cursorScreenPos = x + this._cursorPos - scrollX;
+                const beforeCursor = graphemes.slice(scrollIndex, cursorIndex).join('');
+                const cursorScreenPos = x + stringWidth(beforeCursor);
                 if (cursorScreenPos >= x && cursorScreenPos < x + width) {
-                    const cursorChar = this._cursorPos < this._value.length
-                        ? this._value[this._cursorPos]
+                    const cursorChar = cursorIndex < graphemes.length
+                        ? graphemes[cursorIndex]
                         : ' ';
                     screen.setCell(cursorScreenPos, y, {
                         char: cursorChar,
