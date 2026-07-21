@@ -141,6 +141,13 @@ export { SplitPane } from './layout/SplitPane.js';
 export type { SplitPaneOptions, SplitDirection } from './layout/SplitPane.js';
 export { LayoutDebug } from './display/LayoutDebug.js';
 export type { LayoutDebugOptions, LayoutDebugInfo } from './display/LayoutDebug.js';
+export { Workspace } from './layout/Workspace.js';
+
+export type {
+    WorkspaceLayout,
+    WorkspaceOptions,
+    WorkspaceStorage,
+} from './layout/Workspace.js';
 
 // ── Feedback Widgets ──────────────────────────────────
 export { ProgressBar } from './feedback/ProgressBar.js';
