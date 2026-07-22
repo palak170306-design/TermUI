@@ -3,7 +3,7 @@
 // ─────────────────────────────────────────────────────
 
 import { describe, it, expect, vi, beforeEach } from 'vitest';
-import { Screen } from '@termuijs/core';
+import { Screen, stringWidth } from '@termuijs/core';
 import { MultiProgress, type ProgressItem } from './MultiProgress.js';
 
 describe('MultiProgress', () => {
@@ -189,6 +189,35 @@ describe('MultiProgress — edge cases', () => {
         mp.render(screen);
         const rows = screen.back.map((row: { char: string }[]) => row.map(c => c.char).join(''));
         expect(rows.some(r => r.trim().length > 0)).toBe(true);
+    });
+
+    it('clips the label column to the widget width', () => {
+        const mp = new MultiProgress({
+            items: [{ label: 'VeryLongLabel', value: 0.5 }],
+            labelWidth: 12,
+            showValues: false,
+        });
+        const screen = new Screen(5, 1);
+        const writeSpy = vi.spyOn(screen, 'writeString');
+        mp.updateRect({ x: 0, y: 0, width: 5, height: 1 });
+        mp.render(screen);
+
+        expect(writeSpy.mock.calls[0]?.[2]).toHaveLength(5);
+    });
+
+    it('clips a wide-character label to the widget width by display width', () => {
+        const mp = new MultiProgress({
+            items: [{ label: '你好你好你好你好', value: 0.5 }],
+            labelWidth: 8,
+            showValues: false,
+        });
+        const screen = new Screen(8, 1);
+        const writeSpy = vi.spyOn(screen, 'writeString');
+        mp.updateRect({ x: 0, y: 0, width: 8, height: 1 });
+        mp.render(screen);
+
+        const [callX, , callText] = writeSpy.mock.calls[0] as [number, number, string];
+        expect(callX + stringWidth(callText)).toBeLessThanOrEqual(8);
     });
 
     it('does not render rows past the assigned height', () => {
