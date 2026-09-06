@@ -17,7 +17,7 @@ We want to thank all the amazing contributors who have helped make TermUI what i
 | <img src="https://avatars.githubusercontent.com/u/150170054?v=4" width="40" height="40" style="border-radius: 50%;" alt="realtushartyagi" /> | [@realtushartyagi](https://github.com/realtushartyagi) | 27 |
 | <img src="https://avatars.githubusercontent.com/u/228184960?v=4" width="40" height="40" style="border-radius: 50%;" alt="riddhima25bet10005-a11y" /> | [@riddhima25bet10005-a11y](https://github.com/riddhima25bet10005-a11y) | 20 |
 | <img src="https://avatars.githubusercontent.com/u/191742943?v=4" width="40" height="40" style="border-radius: 50%;" alt="Rish-2006" /> | [@Rish-2006](https://github.com/Rish-2006) | 18 |
-| <img src="https://avatars.githubusercontent.com/u/227770746?v=4" width="40" height="40" style="border-radius: 50%;" alt="palak170306-design" /> | [@palak170306-design](https://github.com/palak170306-design) | 16 |
+| <img src="https://avatars.githubusercontent.com/u/227770746?v=4" width="40" height="40" style="border-radius: 50%;" alt="palak170306-design" /> | [@palak170306-design](https://github.com/palak170306-design) | 17 |
 | <img src="https://avatars.githubusercontent.com/u/208207751?v=4" width="40" height="40" style="border-radius: 50%;" alt="karthikj5453" /> | [@karthikj5453](https://github.com/karthikj5453) | 16 |
 | <img src="https://avatars.githubusercontent.com/u/211445755?v=4" width="40" height="40" style="border-radius: 50%;" alt="madhuri-perumalla" /> | [@madhuri-perumalla](https://github.com/madhuri-perumalla) | 16 |
 | <img src="https://avatars.githubusercontent.com/u/67773620?v=4" width="40" height="40" style="border-radius: 50%;" alt="Satvik-art-creator" /> | [@Satvik-art-creator](https://github.com/Satvik-art-creator) | 16 |
